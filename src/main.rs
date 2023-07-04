@@ -38,6 +38,8 @@ enum Commands {
         #[arg(short, long)]
         patch: bool,
     },
+    /// Creates and pushes a new release to GitHub
+    Push,
 }
 
 fn main() {
@@ -69,6 +71,9 @@ options are: --major, --minor, --patch"
                 return;
             }
             generate_changelog(*major, *minor, *patch);
+        }
+        Commands::Push => {
+            push();
         }
     }
 }
@@ -149,13 +154,7 @@ fn generate_changelog(major: bool, minor: bool, patch: bool) {
 
     println!("Changelog entries added.");
 
-    let binding = fs::read_to_string(VERSION_FILE_NAME)
-        .expect("Failed to read the version text file into memory!");
-    let shippy_compat_version = binding.split('\n').nth(1).unwrap();
-
-    let new_version_file_contents = format!("{new_version}\n{shippy_compat_version}");
-    fs::write(VERSION_FILE_NAME, new_version_file_contents)
-        .expect("Failed to write the new version text file!");
+    fs::write(VERSION_FILE_NAME, new_version).expect("Failed to write the new version text file!");
 
     println!("Version text updated.");
 
@@ -226,5 +225,73 @@ fn get_last_version() -> String {
         .read_line(&mut version_line)
         .expect("Cannot read line from version string buffer!");
 
-    version_line
+    version_line.trim().to_string()
+}
+
+fn push() {
+    let version = get_last_version();
+
+    let changes = get_changes(&version);
+
+    Command::new("git")
+        .arg("add")
+        .arg(CHANGELOG_FILE_NAME)
+        .status()
+        .expect("Failed to add changelog file to git");
+    Command::new("git")
+        .arg("add")
+        .arg(VERSION_FILE_NAME)
+        .status()
+        .expect("Failed to add version file to git");
+
+    Command::new("git")
+        .arg("commit")
+        .arg("-m")
+        .arg(format!("release: {version}\n\n{changes}"))
+        .status()
+        .expect("Failed to git commit");
+    Command::new("git")
+        .arg("tag")
+        .arg(version)
+        .status()
+        .expect("Failed to tag last git commit");
+
+    Command::new("git")
+        .arg("push")
+        .status()
+        .expect("Failed to push release to GitHub");
+    Command::new("git")
+        .arg("push")
+        .arg("--tags")
+        .status()
+        .expect("Failed to push tag to GitHub");
+}
+
+fn get_changes(version: &str) -> String {
+    let changelog_content =
+        fs::read_to_string(CHANGELOG_FILE_NAME).expect("Cannot read the changelog file to memory!");
+
+    println!("Got version: {}", version);
+
+    let start_marker = format!("# [{version}] - ");
+    let end_marker = format!("[{version}]: https://github.com/shipperstack/shipper/compare/");
+
+    let mut extracted_changes = String::new();
+    let mut is_in_target_version_section = false;
+
+    for line in changelog_content.lines() {
+        if line.starts_with(&start_marker) {
+            is_in_target_version_section = true;
+            continue;
+        } else if line.starts_with(&end_marker) {
+            break;
+        }
+
+        if is_in_target_version_section {
+            extracted_changes.push_str(line);
+            extracted_changes.push('\n');
+        }
+    }
+
+    extracted_changes
 }
