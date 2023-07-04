@@ -14,10 +14,6 @@ inside the repository.
 
 ## Installation
 
-TODO
-
-NOTE: The command below doesn't work yet
-
 Run
 
 ```
