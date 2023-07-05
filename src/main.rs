@@ -279,7 +279,7 @@ fn get_changes(version: &str) -> String {
             break;
         }
 
-        if is_in_target_version_section {
+        if is_in_target_version_section && !line.starts_with("#") {
             extracted_changes.push_str(line);
             extracted_changes.push('\n');
         }
