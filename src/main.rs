@@ -166,8 +166,11 @@ fn get_new_version(last_version_raw: &str, major: bool, minor: bool, patch: bool
 
     if major {
         last_version.major += 1;
+        last_version.minor = 0;
+        last_version.patch = 0;
     } else if minor {
         last_version.minor += 1;
+        last_version.patch = 0;
     } else if patch {
         last_version.patch += 1;
     } else {
