@@ -158,7 +158,7 @@ fn generate_changelog(major: bool, minor: bool, patch: bool) {
 
     println!("Version text updated.");
 
-    println!("Done! Modify the changelog items as necessary and run `push`.")
+    println!("Done! Modify the changelog items as necessary, add with `git add .`, and run `push`.")
 }
 
 fn get_new_version(last_version_raw: &str, major: bool, minor: bool, patch: bool) -> String {
@@ -235,17 +235,6 @@ fn push() {
     let version = get_last_version();
 
     let changes = get_changes(&version);
-
-    Command::new("git")
-        .arg("add")
-        .arg(CHANGELOG_FILE_NAME)
-        .status()
-        .expect("Failed to add changelog file to git");
-    Command::new("git")
-        .arg("add")
-        .arg(VERSION_FILE_NAME)
-        .status()
-        .expect("Failed to add version file to git");
 
     Command::new("git")
         .arg("commit")
