@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog][keep-a-changelog].
 - The `push` subcommand no longer adds the changed files to git before committing
 - Fixed the changelog extracter including headers into the commit message
 
+[0.0.2]: https://github.com/shipperstack/shipper/compare/0.0.1...0.0.2
+
 # [0.0.1] - 2023-07-04
 
 Initial release
